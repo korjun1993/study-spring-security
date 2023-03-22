@@ -27,15 +27,18 @@ public class Account {
     @Column(name = "ACCOUNT_USERNAME")
     private String userName;
 
+    @Builder.Default
     @Column(name = "ACCOUNT_LOGINID")
-    private String userId;
+    private String userId = "이말년";
 
+    @Builder.Default
     @Column(name = "ACCOUNT_PASSWORD")
-    private String password;
+    private String password = "1234";
 
+    @Builder.Default
     @Column(name = "ACCOUNT_ROLE")
     @Enumerated(value = EnumType.STRING)
-    private UserRole userRole;
+    private UserRole userRole = UserRole.USER;
 
     @Column(name = "ACCOUNT_SOCIAL_ID")
     private Long socialId;
