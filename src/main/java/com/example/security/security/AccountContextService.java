@@ -18,7 +18,7 @@ public class AccountContextService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
-        Account account = accountRepository.findBuyUserId(userId).orElseThrow(() -> new NoSuchElementException("아이디에 맞는 계정이 없습니다"));
+        Account account = accountRepository.findByUserId(userId).orElseThrow(() -> new NoSuchElementException("아이디에 맞는 계정이 없습니다"));
         return getAccountContext(account);
     }
 
