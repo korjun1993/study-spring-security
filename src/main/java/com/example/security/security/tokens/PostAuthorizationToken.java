@@ -1,5 +1,6 @@
 package com.example.security.security.tokens;
 
+import com.example.security.security.AccountContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -9,5 +10,9 @@ public class PostAuthorizationToken extends UsernamePasswordAuthenticationToken 
 
     public PostAuthorizationToken(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities) {
         super(principal, credentials, authorities);
+    }
+
+    public static PostAuthorizationToken getTokenFromAccountContext(AccountContext context) {
+        return new PostAuthorizationToken(context, context.getPassword(), context.getAuthorities());
     }
 }
