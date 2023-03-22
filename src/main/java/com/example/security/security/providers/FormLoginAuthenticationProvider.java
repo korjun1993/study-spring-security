@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.NoSuchElementException;
@@ -19,9 +19,8 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class FormLoginAuthenticationProvider implements AuthenticationProvider {
 
+    private final PasswordEncoder passwordEncoder;
     private final AccountContextService accountContextService;
-    private final AccountRepository accountRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
 
     /**
      * @param authentication 인증처리를 하기 전 인증객체
@@ -36,10 +35,10 @@ public class FormLoginAuthenticationProvider implements AuthenticationProvider {
         String username = token.getUserName();
         String password = token.getUserPassword();
 
-        Account account = accountRepository.findByUserId(username).orElseThrow(() -> new NoSuchElementException("정보에 맞는 계정이 없습니다."));
+        AccountContext account = (AccountContext) accountContextService.loadUserByUsername(username);
 
-        if (isCorrectPassword(password, account)) {
-            return PostAuthorizationToken.getTokenFromAccountContext(AccountContext.fromAccountModel(account));
+        if (isCorrectPassword(password, account.getPassword())) {
+            return PostAuthorizationToken.getTokenFromAccountContext(account);
         }
 
         throw new NoSuchElementException("인증 정보가 정확하지 않습니다.");
@@ -54,7 +53,7 @@ public class FormLoginAuthenticationProvider implements AuthenticationProvider {
         return PreAuthorizationToken.class.isAssignableFrom(authentication);
     }
 
-    private boolean isCorrectPassword(String password, Account account) {
-        return passwordEncoder.matches(account.getPassword(), password);
+    private boolean isCorrectPassword(String requestPassword, String password) {
+        return passwordEncoder.matches(password, requestPassword);
     }
 }
