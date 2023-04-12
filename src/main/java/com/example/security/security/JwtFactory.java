@@ -21,6 +21,7 @@ public class JwtFactory {
         try {
             token = JWT.create()
                     .withIssuer("spring-security")
+                    .withClaim("USERNAME", context.getUsername())
                     .withClaim("USER_ROLE", authorities.get(0).getAuthority())
                     .sign(generateAlgorithm());
         } catch (Exception e) {

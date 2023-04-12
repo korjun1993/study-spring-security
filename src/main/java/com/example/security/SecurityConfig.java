@@ -1,9 +1,14 @@
-package com.example.security.security;
+package com.example.security;
 
+import com.example.security.security.filters.FilterSkipMatcher;
 import com.example.security.security.filters.FormLoginFilter;
+import com.example.security.security.filters.JwtAuthenticationFilter;
 import com.example.security.security.handlers.FormLoginAuthenticationFailureHandler;
 import com.example.security.security.handlers.FormLoginAuthenticationSuccessHandler;
+import com.example.security.security.handlers.JwtAuthenticationFailureHandler;
 import com.example.security.security.providers.FormLoginAuthenticationProvider;
+import com.example.security.security.providers.JwtAuthenticationProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,19 +19,20 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.util.Arrays;
+
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    @Autowired
-    private FormLoginAuthenticationProvider formLoginAuthenticationProvider;
-
-    @Autowired
-    private FormLoginAuthenticationFailureHandler failureHandler;
-
-    @Autowired
-    private FormLoginAuthenticationSuccessHandler successHandler;
+    private final FormLoginAuthenticationProvider formLoginAuthenticationProvider;
+    private final FormLoginAuthenticationFailureHandler failureHandler;
+    private final FormLoginAuthenticationSuccessHandler successHandler;
+    private final JwtAuthenticationProvider jwtAuthenticationProvider;
+    private final JwtAuthenticationFailureHandler jwtFailureHandler;
+    private final HeaderTokenExtractor extractor;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -38,7 +44,9 @@ public class SecurityConfig {
         // provider 및 filter 등록
         http
                 .addFilterBefore(getLoginFiler(), UsernamePasswordAuthenticationFilter.class)
-                .authenticationProvider(formLoginAuthenticationProvider);
+                .addFilterBefore(getJwtFilter(), UsernamePasswordAuthenticationFilter.class)
+                .authenticationProvider(formLoginAuthenticationProvider)
+                .authenticationProvider(jwtAuthenticationProvider);
 
         return http.build();
     }
@@ -46,5 +54,10 @@ public class SecurityConfig {
     protected FormLoginFilter getLoginFiler() {
         FormLoginFilter filter = new FormLoginFilter("/formlogin", successHandler, failureHandler);
         return filter;
+    }
+
+    protected JwtAuthenticationFilter getJwtFilter() {
+        FilterSkipMatcher matcher = new FilterSkipMatcher(Arrays.asList("/formlogin"), "/api/**");
+        return new JwtAuthenticationFilter(matcher, jwtFailureHandler, extractor);
     }
 }
